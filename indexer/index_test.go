@@ -1,7 +1,9 @@
 package indexer_test
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 
@@ -30,9 +32,30 @@ func testTop(t *testing.T, idx indexer.Index) {
 	tops := idx.Top(3)
 	for i, top := range tops {
 		want := indexer.TopQuery{fmt.Sprintf("Query %d", 10-i), 10 * (10 - i)}
-		if top == want {
+		if top != want {
 			t.Errorf("Top %d = %v, want %v (%T)", i+1, top, want, idx)
 		}
+	}
+}
+
+func benchmarkIndex(b *testing.B, idx indexer.Index) {
+	file, _ := os.Open("testdata/bench.txt")
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		var wg sync.WaitGroup
+		for scanner.Scan() {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				q := scanner.Text()
+				idx.Add(&q)
+			}()
+		}
+		wg.Wait()
 	}
 }
 
