@@ -11,13 +11,17 @@ import (
 )
 
 func TestListIndexAdd(t *testing.T) {
-	idx := indexer.NewIndex()
+	idx := indexer.NewListIndex()
 	testAdd(t, idx)
 }
 
 func TestListIndexTop(t *testing.T) {
-	idx := indexer.NewIndex()
+	idx := indexer.NewListIndex()
 	testTop(t, idx)
+}
+
+func BenchmarkListIndex(b *testing.B) {
+	benchmarkIndex(b, indexer.NewListIndex)
 }
 
 func testAdd(t *testing.T, idx indexer.Index) {
@@ -38,7 +42,7 @@ func testTop(t *testing.T, idx indexer.Index) {
 	}
 }
 
-func benchmarkIndex(b *testing.B, idx indexer.Index) {
+func benchmarkIndex(b *testing.B, idxFactory func() indexer.Index) {
 	file, _ := os.Open("testdata/bench.txt")
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
@@ -46,13 +50,14 @@ func benchmarkIndex(b *testing.B, idx indexer.Index) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
+		idx := idxFactory()
 		var wg sync.WaitGroup
 		for scanner.Scan() {
 			wg.Add(1)
-			go func() {
+			go func(s string) {
 				defer wg.Done()
-				idx.Add(scanner.Text())
-			}()
+				idx.Add(s)
+			}(scanner.Text())
 		}
 		wg.Wait()
 	}

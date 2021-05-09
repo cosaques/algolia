@@ -14,7 +14,7 @@ type indexData struct {
 	orderedEl *list.Element
 }
 
-func NewIndex() *listIndex {
+func NewListIndex() Index {
 	i := &listIndex{
 		data:      make(map[*string]*indexData),
 		toIndex:   make(chan *string),
