@@ -51,8 +51,7 @@ func benchmarkIndex(b *testing.B, idx indexer.Index) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				q := scanner.Text()
-				idx.Add(&q)
+				idx.Add(scanner.Text())
 			}()
 		}
 		wg.Wait()
@@ -67,7 +66,7 @@ func index(idx indexer.Index, queriesNb, countMultimply int) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				idx.Add(&query)
+				idx.Add(query)
 			}()
 		}
 	}

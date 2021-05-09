@@ -2,12 +2,11 @@ package main
 
 import "fmt"
 
-type person struct {
-	name string
-}
-
 func main() {
-	p1 := person{"artem"}
-	p2 := person{"artem2"}
-	fmt.Println(p1 == p2)
+	m := map[string]int{"artem": 1}
+	if m, exist := m["artem2"]; !exist {
+		fmt.Println("not exists", m)
+	} else {
+		fmt.Println(m)
+	}
 }

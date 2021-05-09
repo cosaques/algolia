@@ -25,8 +25,8 @@ func NewIndex() *listIndex {
 	return i
 }
 
-func (i *listIndex) Add(s *string) {
-	i.toIndex <- s
+func (i *listIndex) Add(s string) {
+	i.toIndex <- LoadOrStoreStringPtr(s)
 }
 
 func (i *listIndex) Len() int {
