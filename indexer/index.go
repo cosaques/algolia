@@ -29,7 +29,7 @@ type (
 	}
 
 	indexArgs struct {
-		p         *string
+		s         *string
 		completed chan<- bool
 	}
 )
@@ -75,13 +75,13 @@ func (idx *index) Top(size int) []TopQuery {
 
 func (idx *index) run() {
 	for indexArgs := range idx.toIndex {
-		p := indexArgs.p
+		s := indexArgs.s
 		idx.mux.Lock()
 		{
-			if _, exists := idx.counts[p]; !exists {
-				idx.order = append(idx.order, p)
+			if _, exists := idx.counts[s]; !exists {
+				idx.order = append(idx.order, s)
 			}
-			idx.counts[p]++
+			idx.counts[s]++
 
 			if len(idx.toIndex) == 0 {
 				sort.Slice(idx.order, func(i, j int) bool {
