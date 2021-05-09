@@ -1,7 +1,7 @@
 package indexer
 
 type Index interface {
-	Add(string)
+	Add(string) error
 	Len() int
 	Top(int) []TopQuery
 }

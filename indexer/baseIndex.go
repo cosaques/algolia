@@ -5,26 +5,34 @@ import (
 	"sync"
 )
 
-type baseIndex struct {
-	counts  map[*string]int
-	order   []*string
-	mux     sync.RWMutex
-	toIndex chan *string
-}
+type (
+	baseIndex struct {
+		counts  map[*string]int
+		order   []*string
+		mux     sync.RWMutex
+		toIndex chan indexArgs
+	}
+
+	indexArgs struct {
+		p      *string
+		output chan<- error
+	}
+)
 
 func NewBaseIndex() Index {
 	idx := &baseIndex{
 		counts:  make(map[*string]int),
 		mux:     sync.RWMutex{},
-		toIndex: make(chan *string, 1),
+		toIndex: make(chan indexArgs, 1),
 	}
 	go idx.run()
 	return idx
 }
 
-func (idx *baseIndex) Add(s string) {
-	p := LoadOrStoreStringPtr(s)
-	idx.toIndex <- p
+func (idx *baseIndex) Add(s string) error {
+	errCh := make(chan error)
+	idx.toIndex <- indexArgs{LoadOrStoreStringPtr(s), errCh}
+	return <-errCh
 }
 
 func (idx *baseIndex) Len() int {
@@ -51,7 +59,8 @@ func (idx *baseIndex) Top(size int) []TopQuery {
 }
 
 func (idx *baseIndex) run() {
-	for p := range idx.toIndex {
+	for indexArgs := range idx.toIndex {
+		p := indexArgs.p
 		idx.mux.Lock()
 		{
 			if _, exists := idx.counts[p]; !exists {
@@ -66,5 +75,6 @@ func (idx *baseIndex) run() {
 			}
 		}
 		idx.mux.Unlock()
+		indexArgs.output <- nil
 	}
 }
