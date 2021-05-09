@@ -24,6 +24,20 @@ func BenchmarkListIndex(b *testing.B) {
 	benchmarkIndex(b, indexer.NewListIndex)
 }
 
+func TestBaseIndexAdd(t *testing.T) {
+	idx := indexer.NewBaseIndex()
+	testAdd(t, idx)
+}
+
+func TestBaseIndexTop(t *testing.T) {
+	idx := indexer.NewBaseIndex()
+	testTop(t, idx)
+}
+
+func BenchmarkBaseIndex(b *testing.B) {
+	benchmarkIndex(b, indexer.NewBaseIndex)
+}
+
 func testAdd(t *testing.T, idx indexer.Index) {
 	index(idx, 10, 10)
 	if idx.Len() != 10 {
