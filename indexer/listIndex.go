@@ -1,6 +1,8 @@
 package indexer
 
-import "container/list"
+import (
+	"container/list"
+)
 
 type listIndex struct {
 	data      map[*string]*indexData
@@ -47,24 +49,6 @@ func (i *listIndex) Top(size int) []TopQuery {
 
 func (i *listIndex) run() {
 	for {
-		// priority to requests
-		select {
-		case r := <-i.requests:
-			switch req := r.(type) {
-			case *distinctRequest:
-				req.receive(len(i.data))
-			case *topQueriesRequest:
-				res := make([]TopQuery, 0, req.size)
-				for c, el := req.size, i.orderList.Back(); c > 0 && el != nil; c, el = c-1, el.Prev() {
-					res = append(res, TopQuery{*(el.Value.(*string)), i.data[el.Value.(*string)].count})
-				}
-				req.receive(res)
-			}
-			continue
-		default:
-		}
-
-		// wait either for a request or an indexation demande
 		select {
 		case r := <-i.requests:
 			switch req := r.(type) {
@@ -80,16 +64,23 @@ func (i *listIndex) run() {
 		case s := <-i.toIndex:
 			data, exists := i.data[s]
 			if !exists {
-				i.orderList.PushBack(s)
-				i.data[s] = &indexData{1, i.orderList.Back()}
+				e := i.orderList.PushFront(s)
+				i.data[s] = &indexData{1, e}
 			} else {
 				data.count++
-				e := data.orderedEl
-				for e.Next() != nil && i.data[e.Next().Value.(*string)].count < data.count {
-					e = e.Next()
+
+				var eMove *list.Element
+				for e := data.orderedEl.Next(); e != nil; e = e.Next() {
+					es := e.Value.(*string)
+					if data.count > i.data[es].count {
+						eMove = e
+					} else {
+						break
+					}
 				}
-				if data.orderedEl != e {
-					i.orderList.MoveAfter(data.orderedEl, e)
+
+				if eMove != nil {
+					i.orderList.MoveAfter(data.orderedEl, eMove)
 				}
 			}
 		}
