@@ -57,21 +57,26 @@ func testTop(t *testing.T, idx indexer.Index) {
 }
 
 func benchmarkIndex(b *testing.B, idxFactory func() indexer.Index) {
+	var queries []string
+
 	file, _ := os.Open("testdata/bench.txt")
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		queries = append(queries, scanner.Text())
+	}
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		idx := idxFactory()
 		var wg sync.WaitGroup
-		for scanner.Scan() {
+		for _, query := range queries {
 			wg.Add(1)
 			go func(s string) {
 				defer wg.Done()
 				idx.Add(s)
-			}(scanner.Text())
+			}(query)
 		}
 		wg.Wait()
 	}
