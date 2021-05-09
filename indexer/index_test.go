@@ -10,32 +10,18 @@ import (
 	"github.com/cosaques/algolia/indexer"
 )
 
-func TestListIndexAdd(t *testing.T) {
-	idx := indexer.NewListIndex()
+func TestIndexAdd(t *testing.T) {
+	idx := indexer.NewIndex()
 	testAdd(t, idx)
 }
 
-func TestListIndexTop(t *testing.T) {
-	idx := indexer.NewListIndex()
+func TestIndexTop(t *testing.T) {
+	idx := indexer.NewIndex()
 	testTop(t, idx)
 }
 
-func BenchmarkListIndex(b *testing.B) {
-	benchmarkIndex(b, indexer.NewListIndex)
-}
-
-func TestBaseIndexAdd(t *testing.T) {
-	idx := indexer.NewBaseIndex()
-	testAdd(t, idx)
-}
-
-func TestBaseIndexTop(t *testing.T) {
-	idx := indexer.NewBaseIndex()
-	testTop(t, idx)
-}
-
-func BenchmarkBaseIndex(b *testing.B) {
-	benchmarkIndex(b, indexer.NewBaseIndex)
+func BenchmarkIndex(b *testing.B) {
+	benchmarkIndex(b, indexer.NewIndex)
 }
 
 func testAdd(t *testing.T, idx indexer.Index) {
