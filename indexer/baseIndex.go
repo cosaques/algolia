@@ -14,8 +14,8 @@ type (
 	}
 
 	indexArgs struct {
-		p      *string
-		output chan<- error
+		p         *string
+		completed chan<- bool
 	}
 )
 
@@ -29,10 +29,10 @@ func NewBaseIndex() Index {
 	return idx
 }
 
-func (idx *baseIndex) Add(s string) error {
-	errCh := make(chan error)
-	idx.toIndex <- indexArgs{LoadOrStoreStringPtr(s), errCh}
-	return <-errCh
+func (idx *baseIndex) Add(s string) {
+	completed := make(chan bool)
+	idx.toIndex <- indexArgs{LoadOrStoreStringPtr(s), completed}
+	<-completed
 }
 
 func (idx *baseIndex) Len() int {
@@ -75,6 +75,6 @@ func (idx *baseIndex) run() {
 			}
 		}
 		idx.mux.Unlock()
-		indexArgs.output <- nil
+		indexArgs.completed <- true
 	}
 }

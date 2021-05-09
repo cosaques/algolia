@@ -27,9 +27,8 @@ func NewListIndex() Index {
 	return i
 }
 
-func (i *listIndex) Add(s string) error {
+func (i *listIndex) Add(s string) {
 	i.toIndex <- LoadOrStoreStringPtr(s)
-	return nil
 }
 
 func (i *listIndex) Len() int {
