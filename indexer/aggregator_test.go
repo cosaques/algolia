@@ -87,18 +87,24 @@ func TestAggregatorAdd(t *testing.T) {
 }
 
 func BenchmarkAggregator(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		file, _ := os.Open("testdata/bench_aggr.tsv")
-		defer file.Close()
+	var traces []indexer.Trace
 
-		traceReader := indexer.NewTraceReader(file)
+	file, _ := os.Open("testdata/bench_aggr.tsv")
+	defer file.Close()
+	traceReader := indexer.NewTraceReader(file)
+	for trace, err := traceReader.Read(); !errors.Is(err, io.EOF); trace, err = traceReader.Read() {
+		if err != nil {
+			b.Fatalf("Error %v occured", err)
+		}
+		traces = append(traces, trace)
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
 		aggregator := indexer.NewAggregator()
 		var wg sync.WaitGroup
-		for trace, err := traceReader.Read(); !errors.Is(err, io.EOF); trace, err = traceReader.Read() {
-			if err != nil {
-				b.Fatalf("Error %v occured", err)
-			}
-
+		for _, trace := range traces {
 			wg.Add(1)
 			go func(trace indexer.Trace) {
 				defer wg.Done()
