@@ -12,26 +12,14 @@ import (
 
 func TestIndexAdd(t *testing.T) {
 	idx := indexer.NewIndex()
-	testAdd(t, idx)
-}
-
-func TestIndexTop(t *testing.T) {
-	idx := indexer.NewIndex()
-	testTop(t, idx)
-}
-
-func BenchmarkIndex(b *testing.B) {
-	benchmarkIndex(b, indexer.NewIndex)
-}
-
-func testAdd(t *testing.T, idx indexer.Index) {
 	index(idx, 10, 10)
 	if idx.Len() != 10 {
 		t.Fatalf("Index len = %d, want %d (%T)", idx.Len(), 10, idx)
 	}
 }
 
-func testTop(t *testing.T, idx indexer.Index) {
+func TestIndexTop(t *testing.T) {
+	idx := indexer.NewIndex()
 	index(idx, 10, 10)
 	tops := idx.Top(3)
 	for i, top := range tops {
@@ -39,6 +27,32 @@ func testTop(t *testing.T, idx indexer.Index) {
 		if top != want {
 			t.Errorf("Top %d = %v, want %v (%T)", i+1, top, want, idx)
 		}
+	}
+}
+
+func BenchmarkIndex(b *testing.B) {
+	var queries []string
+
+	file, _ := os.Open("testdata/bench_idx.txt")
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		queries = append(queries, scanner.Text())
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		idx := indexer.NewIndex()
+		var wg sync.WaitGroup
+		for _, query := range queries {
+			wg.Add(1)
+			go func(s string) {
+				defer wg.Done()
+				idx.Add(s)
+			}(query)
+		}
+		wg.Wait()
 	}
 }
 
@@ -55,30 +69,4 @@ func index(idx indexer.Index, queriesNb, countMultimply int) {
 		}
 	}
 	wg.Wait()
-}
-
-func benchmarkIndex(b *testing.B, idxFactory func() indexer.Index) {
-	var queries []string
-
-	file, _ := os.Open("testdata/bench.txt")
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		queries = append(queries, scanner.Text())
-	}
-
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		idx := idxFactory()
-		var wg sync.WaitGroup
-		for _, query := range queries {
-			wg.Add(1)
-			go func(s string) {
-				defer wg.Done()
-				idx.Add(s)
-			}(query)
-		}
-		wg.Wait()
-	}
 }
