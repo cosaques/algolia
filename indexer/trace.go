@@ -31,7 +31,7 @@ func NewTraceReader(tsvFile io.Reader) TraceReader {
 func (t *traceReader) Read() (Trace, error) {
 	csvRecord, err := t.csvReader.Read()
 	if err != nil {
-		return Trace{}, fmt.Errorf("traceReader.Read(): %w", err)
+		return Trace{}, fmt.Errorf("traceReader.Read(): %w.", err)
 	}
 
 	if len(csvRecord) != 2 {
@@ -40,7 +40,7 @@ func (t *traceReader) Read() (Trace, error) {
 
 	date, err := time.Parse("2006-01-02 15:04:05", csvRecord[0])
 	if err != nil {
-		return Trace{}, fmt.Errorf("traceReader.Read(): %w", err)
+		return Trace{}, fmt.Errorf("traceReader.Read(): %w.", err)
 	}
 
 	return Trace{Date: date, Query: csvRecord[1]}, nil

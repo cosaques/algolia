@@ -42,6 +42,21 @@ func testTop(t *testing.T, idx indexer.Index) {
 	}
 }
 
+func index(idx indexer.Index, queriesNb, countMultimply int) {
+	var wg sync.WaitGroup
+	for i := 1; i <= queriesNb; i++ {
+		query := fmt.Sprintf("Query %d", i)
+		for j := 0; j < countMultimply*i; j++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				idx.Add(query)
+			}()
+		}
+	}
+	wg.Wait()
+}
+
 func benchmarkIndex(b *testing.B, idxFactory func() indexer.Index) {
 	var queries []string
 
@@ -66,19 +81,4 @@ func benchmarkIndex(b *testing.B, idxFactory func() indexer.Index) {
 		}
 		wg.Wait()
 	}
-}
-
-func index(idx indexer.Index, queriesNb, countMultimply int) {
-	var wg sync.WaitGroup
-	for i := 1; i <= queriesNb; i++ {
-		query := fmt.Sprintf("Query %d", i)
-		for j := 0; j < countMultimply*i; j++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				idx.Add(query)
-			}()
-		}
-	}
-	wg.Wait()
 }
