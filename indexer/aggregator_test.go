@@ -1,6 +1,9 @@
 package indexer_test
 
 import (
+	"errors"
+	"io"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -80,5 +83,28 @@ func TestAggregatorAdd(t *testing.T) {
 				t.Errorf("GetIndexFor(%q).Len() = %d, want %d", tt.timeRange, idx.Len(), tt.len)
 			}
 		})
+	}
+}
+
+func BenchmarkAggregator(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		file, _ := os.Open("testdata/bench_aggr.tsv")
+		defer file.Close()
+
+		traceReader := indexer.NewTraceReader(file)
+		aggregator := indexer.NewAggregator()
+		var wg sync.WaitGroup
+		for trace, err := traceReader.Read(); !errors.Is(err, io.EOF); trace, err = traceReader.Read() {
+			if err != nil {
+				b.Fatalf("Error %v occured", err)
+			}
+
+			wg.Add(1)
+			go func(trace indexer.Trace) {
+				defer wg.Done()
+				aggregator.Add(trace)
+			}(trace)
+		}
+		wg.Wait()
 	}
 }
