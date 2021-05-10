@@ -3,15 +3,15 @@ package indexer
 import "sync"
 
 var stringCache map[string]*string = make(map[string]*string)
-var lock = sync.RWMutex{}
+var mux = sync.RWMutex{}
 
 func LoadOrStoreStringPtr(s string) *string {
-	lock.RLock()
+	mux.RLock()
 	if p, exist := stringCache[s]; !exist {
 		// The string wasn't found, so we'll create it.
-		lock.RUnlock()
-		lock.Lock()
-		defer lock.Unlock()
+		mux.RUnlock()
+		mux.Lock()
+		defer mux.Unlock()
 		if p, exist := stringCache[s]; !exist {
 			// Insert the new string.
 			stringCache[s] = &s
@@ -20,7 +20,7 @@ func LoadOrStoreStringPtr(s string) *string {
 			return p
 		}
 	} else {
-		lock.RUnlock()
+		mux.RUnlock()
 		return p
 	}
 }

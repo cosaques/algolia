@@ -75,48 +75,40 @@ func TestParseTimeRange(t *testing.T) {
 }
 
 func TestTimeRange_String(t *testing.T) {
-	type fields struct {
-		Date      time.Time
-		Precision indexer.TimePrecision
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   string
+		name      string
+		timeRange indexer.TimeRange
+		want      string
 	}{
 		{
 			"Year",
-			fields{time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC), indexer.Year},
+			indexer.TimeRange{time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC), indexer.Year},
 			"2006",
 		},
 		{
 			"Month",
-			fields{time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC), indexer.Month},
+			indexer.TimeRange{time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC), indexer.Month},
 			"2006-01",
 		},
 		{
 			"Day",
-			fields{time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC), indexer.Day},
+			indexer.TimeRange{time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC), indexer.Day},
 			"2006-01-02",
 		},
 		{
 			"Hour",
-			fields{time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC), indexer.Hour},
+			indexer.TimeRange{time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC), indexer.Hour},
 			"2006-01-02 15",
 		},
 		{
 			"Minute",
-			fields{time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC), indexer.Minute},
+			indexer.TimeRange{time.Date(2006, 1, 2, 15, 4, 5, 0, time.UTC), indexer.Minute},
 			"2006-01-02 15:04",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := indexer.TimeRange{
-				Date:      tt.fields.Date,
-				Precision: tt.fields.Precision,
-			}
-			if got := r.String(); got != tt.want {
+			if got := tt.timeRange.String(); got != tt.want {
 				t.Errorf("TimeRange.String() = %v, want %v", got, tt.want)
 			}
 		})
