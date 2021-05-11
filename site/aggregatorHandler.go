@@ -11,13 +11,16 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/cosaques/algolia/indexer"
+	"github.com/gorilla/websocket"
 )
 
 type aggregatorHandler struct {
 	aggregator   indexer.Aggregator
-	handledCount int
+	handledCount int32
 }
 
 func newAggregatorHandler() *aggregatorHandler {
@@ -72,6 +75,8 @@ func (h *aggregatorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		h.handlePopular(timeRange, size, w, r)
+	case "monitoring":
+		h.handleMonitor(w, r)
 	}
 }
 
@@ -89,7 +94,6 @@ func (h *aggregatorHandler) handleCount(timeRange indexer.TimeRange, w http.Resp
 }
 
 func (h *aggregatorHandler) handlePopular(timeRange indexer.TimeRange, size int, w http.ResponseWriter, r *http.Request) {
-
 	var result []indexer.TopQuery
 	if idx := h.aggregator.GetIndex(timeRange); idx != nil {
 		result = idx.Top(size)
@@ -103,6 +107,44 @@ func (h *aggregatorHandler) handlePopular(timeRange indexer.TimeRange, size int,
 	w.WriteHeader(200)
 	w.Header().Set("content-type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+}
+
+const (
+	socketBufferSize  = 1024
+	messageBufferSize = 256
+)
+
+var upgrader = &websocket.Upgrader{ReadBufferSize: socketBufferSize, WriteBufferSize: socketBufferSize}
+
+func (h *aggregatorHandler) handleMonitor(w http.ResponseWriter, r *http.Request) {
+	socket, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Print("ServeHTTP (socket upgrade): ", err)
+		return
+	}
+	defer socket.Close()
+
+	go func() {
+		msg := MonitoringMsg{}
+		for {
+			handledCount := int(atomic.LoadInt32(&h.handledCount))
+			if msg.Indexed != handledCount {
+				msg.Indexed = handledCount
+				err := socket.WriteJSON(msg)
+				if err != nil {
+					break
+				}
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}()
+
+	for {
+		err := socket.ReadJSON(nil)
+		if err != nil {
+			return
+		}
+	}
 }
 
 func (h *aggregatorHandler) uploadLogs(filePath string) {
@@ -119,6 +161,7 @@ func (h *aggregatorHandler) uploadLogs(filePath string) {
 		go func(trace indexer.Trace) {
 			defer wg.Done()
 			h.aggregator.Add(trace)
+			atomic.AddInt32(&h.handledCount, 1)
 		}(trace)
 	}
 

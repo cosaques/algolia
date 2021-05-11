@@ -13,4 +13,8 @@ type (
 		Query string `json:"query"`
 		Count int    `json:"count"`
 	}
+
+	MonitoringMsg struct {
+		Indexed int `json:"indexed"`
+	}
 )

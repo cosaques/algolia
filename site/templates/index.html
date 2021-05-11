@@ -1,8 +1,30 @@
 <html>
-    <header>
-        <title>Indexer</title>
-    </header>
-    <body>
-        Hello world
-    </body>
+<header>
+    <title>Indexer</title>
+</header>
+
+<body>
+    <h1>Server state</h1>
+    <p>Indexed : <span id="indexed"></span> queries</p>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script>
+        $(function () {
+            var socket = null;
+            
+            if (!window["WebSocket"]) {
+                alert("Error: Your browser does not support web sockets.")
+            } else {
+                socket = new WebSocket("ws://{{.Host}}/1/queries/monitoring");
+                socket.onclose = function () {
+                    alert("Connection has been closed.");
+                }
+                socket.onmessage = function (e) {
+                    var msg = JSON.parse(e.data);
+                    $("#indexed").text(msg.indexed);
+                }
+            }
+        });
+    </script>
+</body>
+
 </html>
