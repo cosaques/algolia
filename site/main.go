@@ -8,11 +8,14 @@ import (
 
 func main() {
 	addr := flag.String("addr", ":5000", "The addr of the application")
+	file := flag.String("file", "", "The path to .tsv file containing logs")
 	flag.Parse()
 
-	h := NewQueriesHandler("../indexer/testdata/bench_aggr.tsv")
-	http.HandleFunc("/1/queries/count/", h.Distinct)
-	http.HandleFunc("/1/queries/popular/", h.Popular)
+	aggregatorHandler := newAggregatorHandler()
+
+	http.Handle("/1/queries/", aggregatorHandler)
+
+	go aggregatorHandler.uploadLogs(*file)
 
 	// start the web server
 	log.Println("Starting the webserver on ", *addr)
