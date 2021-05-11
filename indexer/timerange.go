@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// TimePrecision represent different levels of date's precision (Year, Month, Day, Hour, Minute).
 type TimePrecision int
 
 const (
@@ -20,11 +21,14 @@ const (
 	minute_layout = "2006-01-02 15:04"
 )
 
+// TimeRange represents a time range that could be
+// presented by a date and its precision (TimePrecision).
 type TimeRange struct {
 	Date      time.Time
 	Precision TimePrecision
 }
 
+// String formats TimeRange to a string.
 func (r TimeRange) String() string {
 	switch r.Precision {
 	case Year:
@@ -40,6 +44,7 @@ func (r TimeRange) String() string {
 	}
 }
 
+// ParseTimeRange parses a string to a TimeRange
 func ParseTimeRange(value string) (TimeRange, error) {
 	patterns := []struct {
 		layout    string
@@ -53,6 +58,7 @@ func ParseTimeRange(value string) (TimeRange, error) {
 	}
 
 	for _, pattern := range patterns {
+		// Each precision has its unique size.
 		if len(value) == len(pattern.layout) {
 			if date, err := time.Parse(pattern.layout, value); err != nil {
 				return TimeRange{}, fmt.Errorf("ParseTimeRange: %w.", err)

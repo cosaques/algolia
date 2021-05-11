@@ -11,7 +11,7 @@ import (
 )
 
 func TestIndexAdd(t *testing.T) {
-	idx := indexer.NewIndex()
+	idx := indexer.NewMemoryIndex()
 	index(idx, 10, 10)
 	if idx.Len() != 10 {
 		t.Fatalf("Index len = %d, want %d (%T)", idx.Len(), 10, idx)
@@ -19,7 +19,7 @@ func TestIndexAdd(t *testing.T) {
 }
 
 func TestIndexTop(t *testing.T) {
-	idx := indexer.NewIndex()
+	idx := indexer.NewMemoryIndex()
 	index(idx, 10, 10)
 	tops := idx.Top(3)
 	for i, top := range tops {
@@ -43,7 +43,7 @@ func BenchmarkIndex(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		idx := indexer.NewIndex()
+		idx := indexer.NewMemoryIndex()
 		var wg sync.WaitGroup
 		for _, query := range queries {
 			wg.Add(1)
