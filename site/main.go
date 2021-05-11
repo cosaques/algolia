@@ -13,6 +13,7 @@ func main() {
 
 	aggregatorHandler := newAggregatorHandler()
 
+	http.Handle("/", &templateHandler{fileName: "index.html"})
 	http.Handle("/1/queries/", aggregatorHandler)
 
 	go aggregatorHandler.uploadLogs(*file)
